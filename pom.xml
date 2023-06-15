@@ -8,7 +8,7 @@
         <!--
             Set this to your robot's name
         -->
-    <artifactId>Robot-${user.name}</artifactId>
+    <artifactId>Robot-04</artifactId>
         <!--
             Set this to your robot's version
         -->

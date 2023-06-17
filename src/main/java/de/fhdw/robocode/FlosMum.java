@@ -19,9 +19,7 @@ public class FlosMum extends AdvancedRobot {
 
     private int shotCounter = 0;
 
-    // Track enemies
-    private Map<String, List<Tuple<Date, ScannedRobotEvent>>> trackedEnemies = Collections.synchronizedMap(new HashMap<>());
-    private Map<String, Date> lastShot = Collections.synchronizedMap(new HashMap<>());
+    private final Tracker tracker = new Tracker();
 
     @Override
     public void run() {
@@ -45,7 +43,7 @@ public class FlosMum extends AdvancedRobot {
         }
     }
 
-    private double scaleFirePowerByDistance(double distance){
+    private double scaleFirePowerByDistance(double distance) {
         double powerRange = maxFirePower - minFirePower;
         double distanceRange = maxDistance - minDistance;
         double distanceRatio = (distance - minDistance) / distanceRange;
@@ -53,49 +51,11 @@ public class FlosMum extends AdvancedRobot {
         return Math.max(minFirePower, Math.min(maxFirePower, power));
     }
 
-    private void trackEnemy(ScannedRobotEvent scannedRobotEvent) {
-        String name = scannedRobotEvent.getName();
-
-        List<Tuple<Date, ScannedRobotEvent>> states;
-        if(!trackedEnemies.containsKey(name)) {
-            states = Collections.synchronizedList(new ArrayList<>());
-            trackedEnemies.put(name, states);
-        } else {
-            states = trackedEnemies.get(name);
-        }
-
-        states.add(new Tuple<Date, ScannedRobotEvent>(Calendar.getInstance().getTime(), scannedRobotEvent));
-    }
-
-    private Tuple<Date, ScannedRobotEvent> getLastScan(String name) {
-        if(!trackedEnemies.containsKey(name)) {
-            return null;
-        }
-
-        return trackedEnemies.get(name).stream().sorted((tuple1, tuple2) -> {
-            if(tuple1.getFirst().getTime() < tuple2.getFirst().getTime()) {
-                return 1;
-            } else if(tuple1.getFirst().getTime() > tuple2.getFirst().getTime()) {
-                return -1;
-            } else {
-                return 0;
-            }
-        }).collect(Collectors.toList()).get(0);
-    }
-
-    private Date getLastShot(String name) {
-        if(!lastShot.containsKey(name)) {
-            return new Date(0);
-        }
-
-        return lastShot.get(name);
-    }
-
     private void checkShots() {
-        for(String name : trackedEnemies.keySet()) {
-            List<Tuple<Date, ScannedRobotEvent>> states = trackedEnemies.get(name);
+        for(String name : tracker.getNames()) {
+            List<Tuple<Date, ScannedRobotEvent>> states = tracker.getTrackedEnemies().get(name);
             List<Tuple<Date, ScannedRobotEvent>> relevantStates = states.stream()
-                    .filter(tuple -> tuple.getFirst().getTime() > getLastShot(name).getTime())
+                    .filter(tuple -> tuple.getFirst().getTime() > tracker.getLastShot(name).getTime())
                     .sorted((tuple1, tuple2) -> {
                         if(tuple1.getFirst().getTime() < tuple2.getFirst().getTime()) {
                             return 1;
@@ -112,7 +72,7 @@ public class FlosMum extends AdvancedRobot {
                     .collect(Collectors.toList());
 
             if(energyLevels.size() >= 2) {
-                lastShot.put(name, Calendar.getInstance().getTime());
+                tracker.trackShot(name);
                 onRobotShot(relevantStates.get(0), relevantStates, energyLevels);
             }
         }
@@ -124,7 +84,7 @@ public class FlosMum extends AdvancedRobot {
 
     @Override
     public void onScannedRobot(ScannedRobotEvent e) {
-        trackEnemy(e);
+        tracker.trackEnemy(e);
         checkShots();
 
         double distance = e.getDistance();
@@ -256,7 +216,7 @@ public class FlosMum extends AdvancedRobot {
         double nearestDistance = Double.POSITIVE_INFINITY;
         ScannedRobotEvent nearestEnemy = null;
 
-        for (List<Tuple<Date, ScannedRobotEvent>> enemyStates : trackedEnemies.values()) {
+        for (List<Tuple<Date, ScannedRobotEvent>> enemyStates : tracker.getTrackedEnemies().values()) {
             if (!enemyStates.isEmpty()) {
                 ScannedRobotEvent latestState = enemyStates.get(enemyStates.size() - 1).getSecond();
                 double distance = latestState.getDistance();

@@ -181,11 +181,28 @@ public class FlosMum extends AdvancedRobot {
         setBack(100);
     }
 
-    private void dodgeBullet() {
-        // Perform a random movement to dodge the bullet
-        double angle = Math.random() * 45 + 45; // Random angle between 45 and 90 degrees
-        setTurnLeft(angle);
-        setAhead(100 * moveDirection);
+    private void moveRandom() {
+        double random = Math.random();
+
+        if(random < 0.5) {
+            if(random < 0.25) {
+                setTurnRight(45);
+            }else {
+                setTurnLeft(-45);
+            }
+        }else {
+            if(random > 0.75) {
+                setTurnLeft(45);
+            }else {
+                setTurnLeft(-45);
+            }
+        }
+
+        if(Math.random() < 0.5) {
+            setAhead(100);
+        } else {
+            setBack(100);
+        }
     }
 
     private void circleMovement() {

@@ -26,6 +26,7 @@ public class FirstRobot04 extends Robot {
 
     public void onHitByBullet(HitByBulletEvent e) {
         turnLeft(90 - e.getBearing());
+    
     }
 
 }

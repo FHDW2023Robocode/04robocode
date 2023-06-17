@@ -1,4 +1,4 @@
-mvn compile package install
+mvn clean compile package install
 
 Copy-Item .\misc\battles.battle C:\robocode\battles\
 

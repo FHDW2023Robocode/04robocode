@@ -1,4 +1,4 @@
-mvn compile package install
+mvn clean compile package install
 
 cp ./misc/battles.battle ~/robocode/battles/
 

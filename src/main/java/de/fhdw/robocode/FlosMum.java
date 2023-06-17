@@ -1,35 +1,33 @@
 package de.fhdw.robocode;
 
-import jdk.internal.reflect.Reflection;
+import com.sun.tools.javac.comp.Check;
+import com.sun.tools.jdeprscan.scan.Scan;
 import robocode.*;
 import robocode.util.Utils;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
+import javax.sound.midi.Track;
+import java.util.*;
+import java.util.spi.CalendarNameProvider;
+import java.util.stream.Collectors;
 
 public class FlosMum extends AdvancedRobot {
-
+    private final double minFirePower = 0.2D;
+    private final double maxFirePower = 3.0D;
+    private final double minDistance = 100.0D;
+    private final double maxDistance = 900.0D;
     private double moveDirection = 1; // Variable to control movement direction
-    private double previousEnergy = 100; // Variable to track previous energy level
+
+    private int shotCounter = 0;
+
+    // Track enemies
+    private Map<String, List<Tuple<Date, ScannedRobotEvent>>> trackedEnemies = Collections.synchronizedMap(new HashMap<>());
+    private Map<String, Date> lastShot = Collections.synchronizedMap(new HashMap<>());
 
     @Override
     public void run() {
         // Set the radar and gun to turn independently
         setAdjustRadarForGunTurn(true);
         setAdjustGunForRobotTurn(true);
-
-        Field[] fields = this.getClass().getDeclaredFields();
-        for(Field field : fields) {
-            System.out.println("Declared field:" + field.getName());
-        }
-
-        // Get reflections of superclass
-        Field[] superClassFields = this.getClass().getSuperclass().getSuperclass().getSuperclass().getSuperclass().getDeclaredFields();
-        for(Field field : superClassFields) {
-            //field.setAccessible(true);
-            //
-
-        }
 
         while (true) {
 
@@ -126,6 +124,11 @@ public class FlosMum extends AdvancedRobot {
 
     @Override
     public void onScannedRobot(ScannedRobotEvent e) {
+        trackEnemy(e);
+        checkShots();
+
+        double distance = e.getDistance();
+
         // Calculate the angle to the scanned robot
         double angle = Math.toRadians((getHeading() + e.getBearing()) % 360);
 
@@ -144,7 +147,13 @@ public class FlosMum extends AdvancedRobot {
         turnGunRight(Utils.normalRelativeAngle(gunAngle - getGunHeading()));
 
         // Fire at the enemy
-        fire(3);
+        setFire(scaleFirePowerByDistance(distance));
+
+        shotCounter ++;
+        if(shotCounter >= 5) {
+            shotCounter = 0;
+            circleMovement();
+        }
     }
 
     @Override

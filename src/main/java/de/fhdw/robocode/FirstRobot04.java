@@ -21,7 +21,7 @@ public class FirstRobot04 extends Robot {
     }
 
     public void onScannedRobot(ScannedRobotEvent e) {
-        fire(1);
+        fire(10);
     }
 
     public void onHitByBullet(HitByBulletEvent e) {

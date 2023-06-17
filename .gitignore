@@ -1,5 +1,7 @@
 .vscode/
-.vscode/
+.idea/
+robots/
 config/
 target/
 results.txt
+pom.xml

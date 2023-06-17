@@ -1,13 +1,9 @@
 package de.fhdw.robocode;
 
-import com.sun.tools.javac.comp.Check;
-import com.sun.tools.jdeprscan.scan.Scan;
 import robocode.*;
 import robocode.util.Utils;
 
-import javax.sound.midi.Track;
 import java.util.*;
-import java.util.spi.CalendarNameProvider;
 import java.util.stream.Collectors;
 
 public class FlosMum extends AdvancedRobot {
@@ -53,7 +49,7 @@ public class FlosMum extends AdvancedRobot {
 
     private void checkShots() {
         for(String name : tracker.getNames()) {
-            List<Tuple<Date, ScannedRobotEvent>> states = tracker.getTrackedEnemies().get(name);
+            List<Tuple<Date, ScannedRobotEvent>> states = tracker.getTrackMap().get(name);
             List<Tuple<Date, ScannedRobotEvent>> relevantStates = states.stream()
                     .filter(tuple -> tuple.getFirst().getTime() > tracker.getLastShot(name).getTime())
                     .sorted((tuple1, tuple2) -> {
@@ -216,7 +212,7 @@ public class FlosMum extends AdvancedRobot {
         double nearestDistance = Double.POSITIVE_INFINITY;
         ScannedRobotEvent nearestEnemy = null;
 
-        for (List<Tuple<Date, ScannedRobotEvent>> enemyStates : tracker.getTrackedEnemies().values()) {
+        for (List<Tuple<Date, ScannedRobotEvent>> enemyStates : tracker.getTrackMap().values()) {
             if (!enemyStates.isEmpty()) {
                 ScannedRobotEvent latestState = enemyStates.get(enemyStates.size() - 1).getSecond();
                 double distance = latestState.getDistance();

@@ -32,7 +32,7 @@ public class Tracker {
         lastShot.put(name, Calendar.getInstance().getTime());
     }
 
-    public Map<String, List<Tuple<Date, ScannedRobotEvent>>> getTrackedEnemies() {
+    public Map<String, List<Tuple<Date, ScannedRobotEvent>>> getTrackMap() {
         return trackedEnemies;
     }
 
@@ -40,8 +40,12 @@ public class Tracker {
         return trackedEnemies.keySet();
     }
 
-    public Tuple<Date, ScannedRobotEvent> getData(String name) {
-        return null;
+    public List<Tuple<Date, ScannedRobotEvent>> getData(String name) {
+        if(!trackedEnemies.containsKey(name)) {
+            return new ArrayList<>();
+        }
+
+        return trackedEnemies.get(name);
     }
 
     public Tuple<Date, ScannedRobotEvent> getLastScan(String name) {
@@ -49,7 +53,7 @@ public class Tracker {
             return null;
         }
 
-        return trackedEnemies.get(name).stream().sorted((tuple1, tuple2) -> {
+        return getData(name).stream().sorted((tuple1, tuple2) -> {
             if(tuple1.getFirst().getTime() < tuple2.getFirst().getTime()) {
                 return 1;
             } else if(tuple1.getFirst().getTime() > tuple2.getFirst().getTime()) {

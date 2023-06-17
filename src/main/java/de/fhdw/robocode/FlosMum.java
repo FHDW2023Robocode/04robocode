@@ -5,6 +5,7 @@ import robocode.*;
 import robocode.util.Utils;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 
 public class FlosMum extends AdvancedRobot {
 
@@ -13,21 +14,22 @@ public class FlosMum extends AdvancedRobot {
 
     @Override
     public void run() {
-
-        //Print class
-        System.out.println("Class: " + this.getClass().getName());
-
         // Set the radar and gun to turn independently
         setAdjustRadarForGunTurn(true);
         setAdjustGunForRobotTurn(true);
-        
-        //Get reflection of class
-        Class<?>[] classes = this.getClass().getDeclaredClasses();
-        for(Class<?> clazz : classes) {
-            System.out.println("Declared class: " + clazz.getName());
-        }
 
         Field[] fields = this.getClass().getDeclaredFields();
+        for(Field field : fields) {
+            System.out.println("Declared field:" + field.getName());
+        }
+
+        // Get reflections of superclass
+        Field[] superClassFields = this.getClass().getSuperclass().getSuperclass().getSuperclass().getSuperclass().getDeclaredFields();
+        for(Field field : superClassFields) {
+            //field.setAccessible(true);
+            //
+
+        }
 
         while (true) {
             // Move in a random direction
@@ -87,19 +89,12 @@ public class FlosMum extends AdvancedRobot {
         double impactX = getX() + Math.sin(Math.toRadians(impactAngle)) * impactDistance;
         double impactY = getY() + Math.cos(Math.toRadians(impactAngle)) * impactDistance;
 
-        // Calculate the angle to the bullet impact point
-        double tankHeading = getHeading();
-        double deltaX = impactX - getX();
-        double deltaY = impactY - getY();
-        double absoluteBearing = Math.toDegrees(Math.atan2(deltaX, deltaY));
-        double dodgeAngle = Utils.normalRelativeAngleDegrees(absoluteBearing - tankHeading);
-
-        // Calculate the movement direction to dodge the bullet
-        int dodgeDirection = (dodgeAngle > 0) ? 1 : -1;
+        // Calculate the perpendicular angle to the bullet trajectory for dodging
+        double dodgeAngle = bulletBearing + 90 * Math.signum(impactDistance);
 
         // Dodge the bullet by moving perpendicularly
         setTurnRight(dodgeAngle);
-        setAhead(100 * dodgeDirection);
+        setAhead(100 * Math.signum(impactDistance));
     }
     @Override
     public void onHitWall(HitWallEvent e) {

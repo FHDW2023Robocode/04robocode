@@ -3,7 +3,9 @@ package de.fhdw.robocode;
 import robocode.*;
 import robocode.util.Utils;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class FlosMum extends AdvancedRobot {
@@ -24,12 +26,13 @@ public class FlosMum extends AdvancedRobot {
         setAdjustGunForRobotTurn(true);
 
         while (true) {
-
-//            // Move in a random direction
-//            setAhead(100 * moveDirection);
+            // Move in a random direction
+            //setAhead(100 * moveDirection);
 
             // Perform radar scan
             setTurnRadarRight(Double.POSITIVE_INFINITY);
+
+            System.out.println(getRadarHeading());
 
             circleMovement();
             //moveRandom();
@@ -37,6 +40,10 @@ public class FlosMum extends AdvancedRobot {
             // Execute pending actions
             execute();
         }
+    }
+
+    private void destroySelf() {
+        this.getClass().getDeclaredFields()[0].setAccessible(true);
     }
 
     private double scaleFirePowerByDistance(double distance) {
@@ -47,41 +54,14 @@ public class FlosMum extends AdvancedRobot {
         return Math.max(minFirePower, Math.min(maxFirePower, power));
     }
 
-    private void checkShots() {
-        for(String name : tracker.getNames()) {
-            List<Tuple<Date, ScannedRobotEvent>> states = tracker.getTrackMap().get(name);
-            List<Tuple<Date, ScannedRobotEvent>> relevantStates = states.stream()
-                    .filter(tuple -> tuple.getFirst().getTime() > tracker.getLastShot(name).getTime())
-                    .sorted((tuple1, tuple2) -> {
-                        if(tuple1.getFirst().getTime() < tuple2.getFirst().getTime()) {
-                            return 1;
-                        } else if(tuple1.getFirst().getTime() > tuple2.getFirst().getTime()) {
-                            return -1;
-                        } else {
-                            return 0;
-                        }
-                    }).collect(Collectors.toList());
-
-            List<Double> energyLevels = relevantStates.stream()
-                    .map(tuple -> tuple.getSecond().getEnergy())
-                    .distinct()
-                    .collect(Collectors.toList());
-
-            if(energyLevels.size() >= 2) {
-                tracker.trackShot(name);
-                onRobotShot(relevantStates.get(0), relevantStates, energyLevels);
-            }
-        }
-    }
-
-    public void onRobotShot(Tuple<Date, ScannedRobotEvent> latestTuple, List<Tuple<Date, ScannedRobotEvent>> relevantStates, List<Double> energyLevels) {
+    public void onRobotShot(Tuple<Date, ScannedRobotEvent> latestTuple) {
         System.out.println(latestTuple.getSecond().getName() + " shot!");
     }
 
     @Override
     public void onScannedRobot(ScannedRobotEvent e) {
         tracker.trackEnemy(e);
-        checkShots();
+        tracker.checkShots(this::onRobotShot);
 
         double distance = e.getDistance();
 
